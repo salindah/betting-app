@@ -1,5 +1,7 @@
 package com.bettingapp.session;
 
+import com.bettingapp.session.model.Session;
+
 /**
  * Created with IntelliJ IDEA.
  * User: shettiarachchi
@@ -9,7 +11,11 @@ package com.bettingapp.session;
  */
 public class SessionManagerTest {
 
+    public static void main(String[] args) {
+        SessionService sessionService = SessionService.getInstance();
 
-
+        Session session = sessionService.getNewSession(12123);
+        System.out.println(session);
+    }
 
 }
