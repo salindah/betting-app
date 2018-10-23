@@ -1,5 +1,7 @@
 package com.bettingapp.session;
 
+import com.bettingapp.common.model.RequestDetails;
+import com.bettingapp.common.model.ResponseDetails;
 import com.bettingapp.service.Service;
 import com.bettingapp.session.model.Session;
 
@@ -24,7 +26,6 @@ public class SessionService implements Service{
     private static SessionService instance;
 
     private SessionService(){
-
     }
 
     public static SessionService getInstance(){
@@ -34,9 +35,8 @@ public class SessionService implements Service{
         return instance;
     }
 
-
-
     public Session getNewSession(int customerId) {
+
         Session session = new Session();
         session.setSessionId(UUID.randomUUID().toString()
                 .replace("-", "")
@@ -48,28 +48,41 @@ public class SessionService implements Service{
     }
 
     private Session getSession(int customerId) {
+
         Session session = sessionMap.get(customerId);
         if (session != null) {
             if (isExpiredSession(session)) {
                 sessionMap.remove(customerId);
                 return null;
-            } else {
-                return session;
             }
         } else {
-            return getNewSession(customerId);
+            session = getNewSession(customerId);
+            sessionMap.put(customerId, session);
         }
+        return session;
     }
 
     public boolean isExpiredSession(Session session) {
         long age = Duration.between(LocalDateTime.now(), session.getCreatedDateTime()).getSeconds();
-        return age > SESSION_TIMEOUT ? true : false;
+        return age > SESSION_TIMEOUT ;
     }
 
 
     @Override
-    public String serveRequest(int id, String action) {
+    public ResponseDetails serveRequest(RequestDetails requestDetails) {
 
-        return getSession(id).getSessionId();
+        ResponseDetails response;
+        try {
+            Session session = getSession(requestDetails.getId());
+            if(session == null){
+                response = new ResponseDetails( ResponseDetails.INTERNAL_ERROR, "Session has expired");
+                return response;
+            }
+            response = new ResponseDetails(ResponseDetails.OK, session.getSessionId());
+        } catch (Exception e){
+            response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "An error occurred while retrieving a session");
+            e.printStackTrace();
+        }
+        return response;
     }
 }

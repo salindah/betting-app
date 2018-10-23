@@ -1,5 +1,8 @@
 package com.bettingapp.service;
 
+import com.bettingapp.common.model.RequestDetails;
+import com.bettingapp.common.model.ResponseDetails;
+
 /**
  * Created with IntelliJ IDEA.
  * User: shettiarachchi
@@ -9,5 +12,5 @@ package com.bettingapp.service;
  */
 public interface Service {
 
-    public String serveRequest(int id, String action);
+    public ResponseDetails serveRequest(RequestDetails requestDetails);
 }

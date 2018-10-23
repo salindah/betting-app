@@ -1,19 +1,26 @@
 package com.bettingapp.server;
 
+import com.bettingapp.betting.BettingService;
+import com.bettingapp.common.model.RequestDetails;
+import com.bettingapp.common.model.ResponseDetails;
 import com.bettingapp.service.Service;
 import com.bettingapp.session.SessionService;
 import com.sun.net.httpserver.*;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Created with IntelliJ IDEA. User: shettiarachchi Date: 20/10/18 Time: 12:47 AM To change this
- * template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: shettiarachchi
+ * Date: 20/10/18
+ * Time: 12:47 AM
+ * To change this template use File | Settings | File Templates.
  */
 public class Server {
 
@@ -39,64 +46,106 @@ public class Server {
     }
 
     private static void handleRequest(HttpExchange exchange) throws IOException {
-
-        URI requestURI = exchange.getRequestURI();
-        String requestMethod = exchange.getRequestMethod();
-
-        String response = "Test";
-        if(requestMethod.equals(REQUEST_METHOD_GET)){
-            response = handleGet(requestURI.getPath());
-        } else if (requestMethod.equals(REQUEST_METHOD_POST)){
-            response = handlePost(requestURI.getPath());
+        RequestDetails requestDetails = getRequestDetailsObj(exchange);
+        ResponseDetails response = null;
+        if(REQUEST_METHOD_GET.equals(requestDetails.getType())){
+            response = handleGet(requestDetails);
+        } else if (REQUEST_METHOD_POST.equals(requestDetails.getType())){
+            response = handlePost(requestDetails);
         }
 
-        //printRequestInfo(exchange);
-
-
-        exchange.sendResponseHeaders(200, response.getBytes().length);//response code and length
+        exchange.sendResponseHeaders(response.getCode(), response.getBody().getBytes().length);//response code and length
         OutputStream os = exchange.getResponseBody();
-        os.write(response.getBytes());
+        os.write(response.getBody().getBytes());
         os.close();
     }
 
-    private static String handleGet(String path){
-        String[] variables =  getPathVariables(path);
-        String response = "";
+    private static RequestDetails getRequestDetailsObj(HttpExchange exchange){
+
+        RequestDetails requestDetails = new RequestDetails();
+        URI requestURI = exchange.getRequestURI();
+
+        requestDetails.setType(exchange.getRequestMethod());
+        String[] variables =  getPathVariables(requestURI.getPath());
         if(variables != null && variables.length > 2){
-            String id = variables[1];
-            String action = variables[2];
-
-            Service service = null;
-            if(GET_KEYWORD_LIST.contains(action)){
-                if( action.equalsIgnoreCase("session")){
-                    service = SessionService.getInstance();
-                }
-            }
-
-            response = service.serveRequest(Integer.valueOf(id), action);
-            System.out.println("response= " + response);
+            requestDetails.setId(Integer.valueOf(variables[1]));
+            requestDetails.setAction(variables[2]);
         }
+
+        if(requestURI.getQuery() != null){
+            requestDetails.setQueryParameterMap(getQueryParameterMap(requestURI.getQuery()));
+        }
+        if(exchange.getRequestBody() != null){
+            requestDetails.setContent(getRequestBodyAsString(exchange.getRequestBody()));
+        }
+
+        System.out.println(requestURI.getQuery());
+        System.out.println(requestDetails.getQueryParameterMap());
+        return requestDetails;
+    }
+
+    private static String getRequestBodyAsString(InputStream inputStream){
+        String content = "";
+        BufferedReader bufferedReader = null;
+        InputStreamReader inputStreamReader = null;
+        try{
+
+            inputStreamReader = new InputStreamReader(inputStream);
+            bufferedReader = new BufferedReader(inputStreamReader);
+            content = bufferedReader.lines().collect(Collectors.joining());
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            try {
+                if(inputStreamReader != null){
+                    inputStreamReader.close();
+                }
+
+                if(bufferedReader != null){
+                    bufferedReader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return content;
+    }
+
+    private static HashMap<String, String> getQueryParameterMap(String query){
+        HashMap<String, String> map = new HashMap<>();
+
+        String[] queryArray = query.split("&");
+        for(String parameter : queryArray){
+            String[] keyValue = parameter.split("=");
+            map.put(keyValue[0], keyValue[1]);
+        }
+        return map;
+    }
+
+    private static ResponseDetails handleGet(RequestDetails requestDetails){
+        ResponseDetails response;
+        Service service = null;
+        if(GET_KEYWORD_LIST.contains(requestDetails.getAction())){
+            if("session".equalsIgnoreCase(requestDetails.getAction())){
+                service = SessionService.getInstance();
+            }
+        }
+        response = service.serveRequest(requestDetails);
+        System.out.println("response= " + response);
         return response;
     }
 
-    private static String handlePost(String path){
-        String[] variables =  getPathVariables(path);
-        if(variables != null && variables.length > 1){
-            System.out.println(variables);
-            String id = variables[1];
-            String action = variables[2];
-
-            if(POST_KEYWORD_LIST.contains(action)){
-
-
+    private static ResponseDetails handlePost(RequestDetails requestDetails){
+        ResponseDetails response;
+        Service service = null;
+        if(POST_KEYWORD_LIST.contains(requestDetails.getAction())){
+            if("stake".equalsIgnoreCase(requestDetails.getAction())){
+                service = BettingService.getInstance();
             }
-
-            System.out.println("id= " + id);
-            System.out.println("action= " + action);
-
-
         }
-        return "";
+        response = service.serveRequest(requestDetails);
+        System.out.println("response= " + response);
+        return response;
     }
 
 
@@ -106,13 +155,6 @@ public class Server {
         }
         return null;
     }
-
-
-    private void delegateAction(String action, int id){
-
-
-    }
-
 
     private static void printRequestInfo(HttpExchange exchange) {
 
