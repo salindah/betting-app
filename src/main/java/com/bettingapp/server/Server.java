@@ -13,6 +13,8 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -24,18 +26,17 @@ import java.util.stream.Collectors;
  */
 public class Server {
 
-    public static final String REQUEST_METHOD_GET = "GET";
+    private static final Integer SERVER_PORT = 8001;
 
-    public static final String REQUEST_METHOD_POST = "POST";
+    private static final Integer THREAD_POOL_SIZE = 20;
 
-    public static final List<String>  GET_KEYWORD_LIST = Arrays.asList("session", "highstakes");
-
-    public static final List<String>  POST_KEYWORD_LIST = Arrays.asList("stake");
+    private static ThreadPoolExecutor executor = null;
 
     public static void startServer() {
 
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(8001), 0);
+            initializeThreadPool();
+            HttpServer server = HttpServer.create(new InetSocketAddress(SERVER_PORT), 0);
             HttpContext context = server.createContext("/");
             context.setHandler(Server::handleRequest);
             server.start();
@@ -45,136 +46,12 @@ public class Server {
         }
     }
 
+
+    private static void initializeThreadPool(){
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    }
+
     private static void handleRequest(HttpExchange exchange) throws IOException {
-        RequestDetails requestDetails = getRequestDetailsObj(exchange);
-        ResponseDetails response = null;
-        if(REQUEST_METHOD_GET.equals(requestDetails.getType())){
-            response = handleGet(requestDetails);
-        } else if (REQUEST_METHOD_POST.equals(requestDetails.getType())){
-            response = handlePost(requestDetails);
-        }
-
-        exchange.sendResponseHeaders(response.getCode(), response.getBody().getBytes().length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(response.getBody().getBytes());
-        os.close();
-    }
-
-    private static RequestDetails getRequestDetailsObj(HttpExchange exchange){
-
-        RequestDetails requestDetails = new RequestDetails();
-        URI requestURI = exchange.getRequestURI();
-
-        requestDetails.setType(exchange.getRequestMethod());
-        String[] variables =  getPathVariables(requestURI.getPath());
-        if(variables != null && variables.length > 2){
-            requestDetails.setId(Integer.valueOf(variables[1]));
-            requestDetails.setAction(variables[2]);
-        }
-
-        if(requestURI.getQuery() != null){
-            requestDetails.setQueryParameterMap(getQueryParameterMap(requestURI.getQuery()));
-        }
-        if(exchange.getRequestBody() != null){
-            requestDetails.setContent(getRequestBodyAsString(exchange.getRequestBody()));
-        }
-        return requestDetails;
-    }
-
-    private static String getRequestBodyAsString(InputStream inputStream){
-        String content = "";
-        BufferedReader bufferedReader = null;
-        InputStreamReader inputStreamReader = null;
-        try{
-
-            inputStreamReader = new InputStreamReader(inputStream);
-            bufferedReader = new BufferedReader(inputStreamReader);
-            content = bufferedReader.lines().collect(Collectors.joining());
-        } catch (Exception e){
-            e.printStackTrace();
-        } finally {
-            try {
-                if(inputStreamReader != null){
-                    inputStreamReader.close();
-                }
-
-                if(bufferedReader != null){
-                    bufferedReader.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return content;
-    }
-
-    private static HashMap<String, String> getQueryParameterMap(String query){
-        HashMap<String, String> map = new HashMap<>();
-
-        String[] queryArray = query.split("&");
-        for(String parameter : queryArray){
-            String[] keyValue = parameter.split("=");
-            map.put(keyValue[0], keyValue[1]);
-        }
-        return map;
-    }
-
-    private static ResponseDetails handleGet(RequestDetails requestDetails){
-        ResponseDetails response;
-        Service service = null;
-        if(GET_KEYWORD_LIST.contains(requestDetails.getAction())){
-            if("session".equalsIgnoreCase(requestDetails.getAction())){
-                service = SessionService.getInstance();
-            } else if ("highstakes".equalsIgnoreCase(requestDetails.getAction())){
-                service = BettingService.getInstance();
-            }
-        }
-        response = service.serveRequest(requestDetails);
-        return response;
-    }
-
-    private static ResponseDetails handlePost(RequestDetails requestDetails){
-        ResponseDetails response;
-        Service service = null;
-        if(POST_KEYWORD_LIST.contains(requestDetails.getAction())){
-            if("stake".equalsIgnoreCase(requestDetails.getAction())){
-                service = BettingService.getInstance();
-            }
-        }
-        response = service.serveRequest(requestDetails);
-        return response;
-    }
-
-
-    private static String[] getPathVariables(String path){
-        if(path != null && path.length() > 1){
-           return path.split("/");
-        }
-        return null;
-    }
-
-    private static void printRequestInfo(HttpExchange exchange) {
-
-        System.out.println("-- headers --");
-        Headers requestHeaders = exchange.getRequestHeaders();
-        requestHeaders.entrySet().forEach(System.out::println);
-
-        System.out.println("-- principle --");
-        HttpPrincipal principal = exchange.getPrincipal();
-        System.out.println(principal);
-
-        System.out.println("-- HTTP method --");
-        String requestMethod = exchange.getRequestMethod();
-        System.out.println(requestMethod);
-
-        System.out.println("-- query --");
-        URI requestURI = exchange.getRequestURI();
-        String query = requestURI.getQuery();
-        System.out.println(query);
-
-        System.out.println("-- path --");
-        System.out.println(requestURI.getPath());
-
-        exchange.getRequestBody();
+        executor.submit(new RequestHandler(exchange));
     }
 }

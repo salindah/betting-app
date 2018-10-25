@@ -57,8 +57,6 @@ public class SessionService implements Service{
                 customerToSessionMap.remove(customerId);
                 sessionToCustomerMap.remove(session.getSessionId());
                 return null;
-            } else {
-
             }
         } else {
             session = getNewSession(customerId);
