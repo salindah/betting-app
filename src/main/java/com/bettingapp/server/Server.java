@@ -54,7 +54,7 @@ public class Server {
             response = handlePost(requestDetails);
         }
 
-        exchange.sendResponseHeaders(response.getCode(), response.getBody().getBytes().length);//response code and length
+        exchange.sendResponseHeaders(response.getCode(), response.getBody().getBytes().length);
         OutputStream os = exchange.getResponseBody();
         os.write(response.getBody().getBytes());
         os.close();
@@ -78,9 +78,6 @@ public class Server {
         if(exchange.getRequestBody() != null){
             requestDetails.setContent(getRequestBodyAsString(exchange.getRequestBody()));
         }
-
-        System.out.println(requestURI.getQuery());
-        System.out.println(requestDetails.getQueryParameterMap());
         return requestDetails;
     }
 
@@ -128,10 +125,11 @@ public class Server {
         if(GET_KEYWORD_LIST.contains(requestDetails.getAction())){
             if("session".equalsIgnoreCase(requestDetails.getAction())){
                 service = SessionService.getInstance();
+            } else if ("highstakes".equalsIgnoreCase(requestDetails.getAction())){
+                service = BettingService.getInstance();
             }
         }
         response = service.serveRequest(requestDetails);
-        System.out.println("response= " + response);
         return response;
     }
 
@@ -144,7 +142,6 @@ public class Server {
             }
         }
         response = service.serveRequest(requestDetails);
-        System.out.println("response= " + response);
         return response;
     }
 

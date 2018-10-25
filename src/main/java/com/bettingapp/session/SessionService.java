@@ -7,8 +7,8 @@ import com.bettingapp.session.model.Session;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,7 +21,9 @@ public class SessionService implements Service{
 
     private static final int SESSION_TIMEOUT = 600;  // Timeout in seconds(10 Minutes)
 
-    private HashMap<Integer, Session> sessionMap = new HashMap();
+    private ConcurrentHashMap<Integer, Session> customerToSessionMap = new ConcurrentHashMap<>();
+
+    private ConcurrentHashMap<String, Integer> sessionToCustomerMap = new ConcurrentHashMap<>();
 
     private static SessionService instance;
 
@@ -43,29 +45,46 @@ public class SessionService implements Service{
                 .toUpperCase());
         session.setCustomerId(customerId);
         session.setCreatedDateTime(LocalDateTime.now());
-        sessionMap.put(customerId, session);
+        customerToSessionMap.put(customerId, session);
         return session;
     }
 
     private Session getSession(int customerId) {
 
-        Session session = sessionMap.get(customerId);
+        Session session = customerToSessionMap.get(customerId);
         if (session != null) {
             if (isExpiredSession(session)) {
-                sessionMap.remove(customerId);
+                customerToSessionMap.remove(customerId);
+                sessionToCustomerMap.remove(session.getSessionId());
                 return null;
+            } else {
+
             }
         } else {
             session = getNewSession(customerId);
-            sessionMap.put(customerId, session);
+            customerToSessionMap.put(customerId, session);
+            sessionToCustomerMap.put(session.getSessionId(), customerId);
         }
+        System.out.println(session);
         return session;
     }
 
-    public boolean isExpiredSession(Session session) {
-        long age = Duration.between(LocalDateTime.now(), session.getCreatedDateTime()).getSeconds();
-        return age > SESSION_TIMEOUT ;
+    public Session getSession(String sessionId){
+        if(!sessionToCustomerMap.isEmpty()){
+            Integer customerId = sessionToCustomerMap.get(sessionId);
+            if(customerId != null){
+                return getSession(customerId);
+            }
+        }
+        return null;
     }
+
+
+    public boolean isExpiredSession(Session session) {
+        long age = Duration.between(session.getCreatedDateTime(), LocalDateTime.now()).getSeconds();
+        return age > SESSION_TIMEOUT;
+    }
+
 
 
     @Override

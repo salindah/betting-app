@@ -40,4 +40,14 @@ public class Session {
     public void setCreatedDateTime(LocalDateTime createdDateTime) {
         this.createdDateTime = createdDateTime;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Session{");
+        sb.append("sessionId='").append(sessionId).append('\'');
+        sb.append(", customerId=").append(customerId);
+        sb.append(", createdDateTime=").append(createdDateTime);
+        sb.append('}');
+        return sb.toString();
+    }
 }
