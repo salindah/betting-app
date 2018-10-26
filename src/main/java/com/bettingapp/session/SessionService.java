@@ -49,7 +49,7 @@ public class SessionService implements Service{
         return session;
     }
 
-    private Session getSession(int customerId) {
+    public Session getSession(int customerId) {
 
         Session session = customerToSessionMap.get(customerId);
         if (session != null) {
@@ -101,5 +101,13 @@ public class SessionService implements Service{
             e.printStackTrace();
         }
         return response;
+    }
+
+    public ConcurrentHashMap<Integer, Session> getCustomerToSessionMap() {
+        return customerToSessionMap;
+    }
+
+    public ConcurrentHashMap<String, Integer> getSessionToCustomerMap() {
+        return sessionToCustomerMap;
     }
 }
