@@ -19,16 +19,16 @@ public class CustomerRecord {
 
     private int highestStake;
 
-    public CustomerRecord(int customerId){
+    public CustomerRecord(int customerId) {
 
         this.customerId = customerId;
         this.stakeList = Collections.synchronizedList(new ArrayList<Integer>());
     }
 
-    public void addStake(int stake){
+    public void addStake(int stake) {
 
         this.stakeList.add(stake);
-        if(stake > highestStake){
+        if (stake > highestStake) {
             highestStake = stake;
         }
     }
@@ -57,10 +57,9 @@ public class CustomerRecord {
         this.highestStake = highestStake;
     }
 
-    public String toCSV(){
+    public String toCSV() {
         return this.customerId + "=" + this.highestStake;
     }
-
 
     @Override
     public String toString() {
@@ -71,5 +70,4 @@ public class CustomerRecord {
         sb.append('}');
         return sb.toString();
     }
-
 }

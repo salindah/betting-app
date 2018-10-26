@@ -47,7 +47,7 @@ public class Server {
     }
 
 
-    private static void initializeThreadPool(){
+    private static void initializeThreadPool() {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     }
 

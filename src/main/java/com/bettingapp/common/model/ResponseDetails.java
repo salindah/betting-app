@@ -15,7 +15,7 @@ public class ResponseDetails {
 
     public static int METHOD_NOT_ALLOWED = 405;
 
-    public ResponseDetails(int code, String body){
+    public ResponseDetails(int code, String body) {
         this.code = code;
         this.body = body;
     }

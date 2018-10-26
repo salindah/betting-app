@@ -42,7 +42,7 @@ public class SessionServiceTest {
 
         Assert.assertNotNull(session);
         Assert.assertNotNull(session.getSessionId());
-        Assert.assertEquals( sessionService.getCustomerToSessionMap().size(), 1);
+        Assert.assertEquals(sessionService.getCustomerToSessionMap().size(), 1);
     }
 
     @Test
@@ -83,7 +83,7 @@ public class SessionServiceTest {
     }
 
     @Test
-    public void getSessionBySessionIdTest(){
+    public void getSessionBySessionIdTest() {
 
         Session session = sessionService.getSession(customerId);
 

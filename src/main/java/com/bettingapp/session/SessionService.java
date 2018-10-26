@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 10:57 PM
  * To change template use File | Settings | File Templates.
  */
-public class SessionService implements Service{
+public class SessionService implements Service {
 
     private static final int SESSION_TIMEOUT = 600;  // Timeout in seconds(10 Minutes)
 
@@ -27,12 +27,12 @@ public class SessionService implements Service{
 
     private static SessionService instance;
 
-    private SessionService(){
+    private SessionService() {
     }
 
-    public static SessionService getInstance(){
-        if(instance == null){
-           instance = new SessionService();
+    public static SessionService getInstance() {
+        if (instance == null) {
+            instance = new SessionService();
         }
         return instance;
     }
@@ -67,10 +67,10 @@ public class SessionService implements Service{
         return session;
     }
 
-    public Session getSession(String sessionId){
-        if(!sessionToCustomerMap.isEmpty()){
+    public Session getSession(String sessionId) {
+        if (!sessionToCustomerMap.isEmpty()) {
             Integer customerId = sessionToCustomerMap.get(sessionId);
-            if(customerId != null){
+            if (customerId != null) {
                 return getSession(customerId);
             }
         }
@@ -83,20 +83,18 @@ public class SessionService implements Service{
         return age > SESSION_TIMEOUT;
     }
 
-
-
     @Override
     public ResponseDetails serveRequest(RequestDetails requestDetails) {
 
         ResponseDetails response;
         try {
             Session session = getSession(requestDetails.getId());
-            if(session == null){
-                response = new ResponseDetails( ResponseDetails.INTERNAL_ERROR, "Session has expired");
+            if (session == null) {
+                response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "Session has expired");
                 return response;
             }
             response = new ResponseDetails(ResponseDetails.OK, session.getSessionId());
-        } catch (Exception e){
+        } catch (Exception e) {
             response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "An error occurred while retrieving a session");
             e.printStackTrace();
         }

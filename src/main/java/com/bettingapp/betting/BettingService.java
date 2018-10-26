@@ -25,12 +25,12 @@ public class BettingService implements Service {
 
     private ConcurrentHashMap<Integer, BetOffer> betOfferMap = new ConcurrentHashMap<>();
 
-    private BettingService(){
+    private BettingService() {
         this.sessionService = SessionService.getInstance();
     }
 
-    public static BettingService getInstance(){
-        if(instance == null){
+    public static BettingService getInstance() {
+        if (instance == null) {
             instance = new BettingService();
         }
         return instance;
@@ -41,9 +41,9 @@ public class BettingService implements Service {
 
         ResponseDetails response = null;
         try {
-            if( requestDetails.getAction().equals("stake")){
+            if (requestDetails.getAction().equals("stake")) {
                 response = addStake(requestDetails);
-            } else if (requestDetails.getAction().equals("highstakes")){
+            } else if (requestDetails.getAction().equals("highstakes")) {
                 response = getHighestStakesList(requestDetails);
             }
         } catch (Exception e) {
@@ -53,16 +53,16 @@ public class BettingService implements Service {
         return response;
     }
 
-    public ResponseDetails addStake(RequestDetails requestDetails) throws Exception{
+    public ResponseDetails addStake(RequestDetails requestDetails) throws Exception {
 
         ResponseDetails response = null;
         String sessionId = requestDetails.getQueryParameterMap().get("sessionkey");
-        if(sessionId != null){
+        if (sessionId != null) {
             Session session = sessionService.getSession(sessionId);
-            if(session != null){
+            if (session != null) {
                 int betOfferId = requestDetails.getId();
                 BetOffer betOffer = betOfferMap.get(betOfferId);
-                if(betOffer == null){
+                if (betOffer == null) {
                     betOffer = new BetOffer(betOfferId);
                     betOfferMap.put(betOfferId, betOffer);
                 }
@@ -70,21 +70,23 @@ public class BettingService implements Service {
                 response = new ResponseDetails(ResponseDetails.OK, "");
             } else {
                 //Implies session has been expired.
-                response = new ResponseDetails( ResponseDetails.INTERNAL_ERROR, "Session has been time out");
+                response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "Session has been time out");
             }
+        } else {
+            response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "Session ID was not found in the request");
         }
 
         betOfferMap.entrySet().forEach(System.out::println);
         return response;
     }
 
-    public ResponseDetails getHighestStakesList(RequestDetails requestDetails) throws Exception{
+    public ResponseDetails getHighestStakesList(RequestDetails requestDetails) throws Exception {
 
-        ResponseDetails response = null;
+        ResponseDetails response;
         int betOfferId = requestDetails.getId();
         BetOffer betOffer = betOfferMap.get(betOfferId);
 
-        if(betOffer != null){
+        if (betOffer != null) {
             String highestStakeList = betOffer.getHighestStakeList();
             response = new ResponseDetails(ResponseDetails.OK, highestStakeList);
         } else {

@@ -29,11 +29,11 @@ public class RequestHandler implements Runnable {
 
     public static final List<String> GET_KEYWORD_LIST = Arrays.asList("session", "highstakes");
 
-    public static final List<String>  POST_KEYWORD_LIST = Arrays.asList("stake");
+    public static final List<String> POST_KEYWORD_LIST = Arrays.asList("stake");
 
     private HttpExchange exchange;
 
-    public RequestHandler(HttpExchange exchange){
+    public RequestHandler(HttpExchange exchange) {
         this.exchange = exchange;
     }
 
@@ -46,9 +46,9 @@ public class RequestHandler implements Runnable {
         try {
             requestDetails = getRequestDetailsObj(exchange);
 
-            if(REQUEST_METHOD_GET.equals(requestDetails.getType())){
+            if (REQUEST_METHOD_GET.equals(requestDetails.getType())) {
                 response = handleGet(requestDetails);
-            } else if (REQUEST_METHOD_POST.equals(requestDetails.getType())){
+            } else if (REQUEST_METHOD_POST.equals(requestDetails.getType())) {
                 response = handlePost(requestDetails);
             }
 
@@ -67,45 +67,45 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    private RequestDetails getRequestDetailsObj(HttpExchange exchange){
+    private RequestDetails getRequestDetailsObj(HttpExchange exchange) {
 
         RequestDetails requestDetails = new RequestDetails();
         URI requestURI = exchange.getRequestURI();
 
         requestDetails.setType(exchange.getRequestMethod());
-        String[] variables =  Utils.getPathVariables(requestURI.getPath());
-        if(variables != null && variables.length > 2){
+        String[] variables = Utils.getPathVariables(requestURI.getPath());
+        if (variables != null && variables.length > 2) {
             requestDetails.setId(Integer.valueOf(variables[1]));
             requestDetails.setAction(variables[2]);
         }
 
-        if(requestURI.getQuery() != null){
+        if (requestURI.getQuery() != null) {
             requestDetails.setQueryParameterMap(Utils.getQueryParameterMap(requestURI.getQuery()));
         }
-        if(exchange.getRequestBody() != null){
+        if (exchange.getRequestBody() != null) {
             requestDetails.setContent(getRequestBodyAsString(exchange.getRequestBody()));
         }
         return requestDetails;
     }
 
-    private String getRequestBodyAsString(InputStream inputStream){
+    private String getRequestBodyAsString(InputStream inputStream) {
         String content = "";
         BufferedReader bufferedReader = null;
         InputStreamReader inputStreamReader = null;
-        try{
+        try {
 
             inputStreamReader = new InputStreamReader(inputStream);
             bufferedReader = new BufferedReader(inputStreamReader);
             content = bufferedReader.lines().collect(Collectors.joining());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {
-                if(inputStreamReader != null){
+                if (inputStreamReader != null) {
                     inputStreamReader.close();
                 }
 
-                if(bufferedReader != null){
+                if (bufferedReader != null) {
                     bufferedReader.close();
                 }
             } catch (IOException e) {
@@ -115,13 +115,13 @@ public class RequestHandler implements Runnable {
         return content;
     }
 
-    private static ResponseDetails handleGet(RequestDetails requestDetails){
+    private static ResponseDetails handleGet(RequestDetails requestDetails) {
         ResponseDetails response;
         Service service = null;
-        if(GET_KEYWORD_LIST.contains(requestDetails.getAction())){
-            if("session".equalsIgnoreCase(requestDetails.getAction())){
+        if (GET_KEYWORD_LIST.contains(requestDetails.getAction())) {
+            if ("session".equalsIgnoreCase(requestDetails.getAction())) {
                 service = SessionService.getInstance();
-            } else if ("highstakes".equalsIgnoreCase(requestDetails.getAction())){
+            } else if ("highstakes".equalsIgnoreCase(requestDetails.getAction())) {
                 service = BettingService.getInstance();
             }
         }
@@ -129,16 +129,15 @@ public class RequestHandler implements Runnable {
         return response;
     }
 
-    private static ResponseDetails handlePost(RequestDetails requestDetails){
+    private static ResponseDetails handlePost(RequestDetails requestDetails) {
         ResponseDetails response;
         Service service = null;
-        if(POST_KEYWORD_LIST.contains(requestDetails.getAction())){
-            if("stake".equalsIgnoreCase(requestDetails.getAction())){
+        if (POST_KEYWORD_LIST.contains(requestDetails.getAction())) {
+            if ("stake".equalsIgnoreCase(requestDetails.getAction())) {
                 service = BettingService.getInstance();
             }
         }
         response = service.serveRequest(requestDetails);
         return response;
     }
-
 }

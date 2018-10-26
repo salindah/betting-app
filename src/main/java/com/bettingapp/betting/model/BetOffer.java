@@ -13,11 +13,13 @@ import java.util.stream.Collectors;
  */
 public class BetOffer {
 
+    private static int stakesLimit = 20;
+
     private int betOfferId;
 
     private ConcurrentHashMap<Integer, CustomerRecord> customerStakeMap;
 
-    public BetOffer(int id){
+    public BetOffer(int id) {
         this.betOfferId = id;
         this.customerStakeMap = new ConcurrentHashMap<>();
     }
@@ -38,20 +40,20 @@ public class BetOffer {
         this.customerStakeMap = customerStakeMap;
     }
 
-    public void addCustomerStake(int customerId, int stake){
+    public void addCustomerStake(int customerId, int stake) {
 
         CustomerRecord record = customerStakeMap.get(customerId);
-        if(record == null){
+        if (record == null) {
             record = new CustomerRecord(customerId);
         }
         record.addStake(stake);
         customerStakeMap.put(customerId, record);
     }
 
-    public synchronized String getHighestStakeList() throws Exception{
+    public synchronized String getHighestStakeList() throws Exception {
 
-        if(customerStakeMap.isEmpty()){
-             return "";
+        if (customerStakeMap.isEmpty()) {
+            return "";
         }
         List<CustomerRecord> recordList = customerStakeMap.values().stream()
                 .collect(Collectors.toList());
@@ -60,14 +62,14 @@ public class BetOffer {
         return toCSV(recordList);
     }
 
-    public String toCSV(List<CustomerRecord> recordList){
+    public String toCSV(List<CustomerRecord> recordList) {
 
-        if(recordList.isEmpty()){
+        if (recordList.isEmpty()) {
             return "";
         }
         final StringBuilder stringBuilder = new StringBuilder();
         recordList.stream()
-                .filter( record -> recordList.indexOf(record) < 2)
+                .filter(record -> recordList.indexOf(record) < stakesLimit)
                 .forEach(record -> stringBuilder.append(",").append(record.toCSV()));
 
         return stringBuilder.toString().replaceFirst(",", "");
