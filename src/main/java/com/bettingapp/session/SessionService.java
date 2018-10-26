@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * User: shettiarachchi
  * Date: 20/10/18
  * Time: 10:57 PM
- * To change template use File | Settings | File Templates.
+ * To class is responsible for session management of the system. Every session will be timed out after 10 minutes.
  */
 public class SessionService implements Service {
 
@@ -37,6 +37,11 @@ public class SessionService implements Service {
         return instance;
     }
 
+    /**
+     * This method will always return a new session object.
+     * @param customerId
+     * @return  New session object
+     */
     public Session getNewSession(int customerId) {
 
         Session session = new Session();
@@ -49,6 +54,12 @@ public class SessionService implements Service {
         return session;
     }
 
+    /**
+     * This method will return the associated session object of a customer.
+     * If the current session has been expired, it would return null otherwise return the current session.
+     * @param customerId
+     * @return Attached session object.
+     */
     public Session getSession(int customerId) {
 
         Session session = customerToSessionMap.get(customerId);
@@ -67,6 +78,11 @@ public class SessionService implements Service {
         return session;
     }
 
+    /**
+     * This method will return the corresponding session object for a session Id.
+     * @param sessionId
+     * @return
+     */
     public Session getSession(String sessionId) {
         if (!sessionToCustomerMap.isEmpty()) {
             Integer customerId = sessionToCustomerMap.get(sessionId);
@@ -83,6 +99,11 @@ public class SessionService implements Service {
         return age > SESSION_TIMEOUT;
     }
 
+    /**
+     * This method would handle the session based on the situation.
+     * @param requestDetails Request object that contains the necessary information.
+     * @return
+     */
     @Override
     public ResponseDetails serveRequest(RequestDetails requestDetails) {
 
@@ -90,7 +111,7 @@ public class SessionService implements Service {
         try {
             Session session = getSession(requestDetails.getId());
             if (session == null) {
-                response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "Session has expired");
+                response = new ResponseDetails(ResponseDetails.INTERNAL_ERROR, "Session has been expired");
                 return response;
             }
             response = new ResponseDetails(ResponseDetails.OK, session.getSessionId());

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
  * User: shettiarachchi
  * Date: 24/10/18
  * Time: 10:59 AM
- * To change this template use File | Settings | File Templates.
+ * This class models a bet offer
  */
 public class BetOffer {
 

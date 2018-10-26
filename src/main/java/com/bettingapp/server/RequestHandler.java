@@ -33,6 +33,10 @@ public class RequestHandler implements Runnable {
 
     private HttpExchange exchange;
 
+    private ResponseDetails response;
+
+    private Service service = null;
+
     public RequestHandler(HttpExchange exchange) {
         this.exchange = exchange;
     }
@@ -40,16 +44,14 @@ public class RequestHandler implements Runnable {
     @Override
     public void run() {
         RequestDetails requestDetails;
-        ResponseDetails response = null;
         OutputStream os = null;
-
         try {
             requestDetails = getRequestDetailsObj(exchange);
 
             if (REQUEST_METHOD_GET.equals(requestDetails.getType())) {
-                response = handleGet(requestDetails);
+                handleGet(requestDetails);
             } else if (REQUEST_METHOD_POST.equals(requestDetails.getType())) {
-                response = handlePost(requestDetails);
+                handlePost(requestDetails);
             }
 
             exchange.sendResponseHeaders(response.getCode(), response.getBody().getBytes().length);
@@ -115,9 +117,7 @@ public class RequestHandler implements Runnable {
         return content;
     }
 
-    private static ResponseDetails handleGet(RequestDetails requestDetails) {
-        ResponseDetails response;
-        Service service = null;
+    private void handleGet(RequestDetails requestDetails) {
         if (GET_KEYWORD_LIST.contains(requestDetails.getAction())) {
             if ("session".equalsIgnoreCase(requestDetails.getAction())) {
                 service = SessionService.getInstance();
@@ -126,18 +126,14 @@ public class RequestHandler implements Runnable {
             }
         }
         response = service.serveRequest(requestDetails);
-        return response;
     }
 
-    private static ResponseDetails handlePost(RequestDetails requestDetails) {
-        ResponseDetails response;
-        Service service = null;
+    private void handlePost(RequestDetails requestDetails) {
         if (POST_KEYWORD_LIST.contains(requestDetails.getAction())) {
             if ("stake".equalsIgnoreCase(requestDetails.getAction())) {
                 service = BettingService.getInstance();
             }
         }
         response = service.serveRequest(requestDetails);
-        return response;
     }
 }

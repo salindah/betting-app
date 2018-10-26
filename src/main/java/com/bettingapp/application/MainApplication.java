@@ -7,7 +7,7 @@ import com.bettingapp.server.Server;
  * User: shettiarachchi
  * Date: 20/10/18
  * Time: 12:48 AM
- * To change this template use File | Settings | File Templates.
+ * This acts as the main entry point for the system and start the server as the first step.
  */
 public class MainApplication {
 

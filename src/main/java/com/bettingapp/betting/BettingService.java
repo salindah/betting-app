@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * User: shettiarachchi
  * Date: 21/10/18
  * Time: 11:45 PM
- * To change this template use File | Settings | File Templates.
+ * To class is responsible for all the key functions of the system.
  */
 public class BettingService implements Service {
 
